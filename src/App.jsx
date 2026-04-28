@@ -1,4 +1,19 @@
-import { useEffect, useState } from 'react';
+// costruisco funzione debounce per risolvere il problema del rendering ad ogni digitazione
+// const debounce = (callback, delay) => {
+//   // clousure
+//   let timer;
+//   return (value) => {
+//     // pulisco ogni volta che si digitalizza
+//     clearTimeout(timer);
+//     timer = setTimeout(() => {
+//       callback(value);
+//     }, delay);
+//   }
+
+// }
+
+import { useCallback, useEffect, useState } from 'react';
+import { debounce } from 'lodash';
 
 function App() {
 
@@ -11,18 +26,32 @@ function App() {
   // controllo oggetto product
   console.log(products)
 
-  useEffect(() => {
+  const fetchProducts = async (query) => {
     if (!query.trim()) {
       setProducts([]);
       return;
     }
-    // chiata Api
-    fetch(`http://localhost:3333/products?search=${query}`)
-      .then(res => res.json())
-      .then(data => setProducts(data))
-      .catch(error => console.error(error))
-      .finally()
 
+    try {
+      // chiata Api
+      fetch(`http://localhost:3333/products?search=${query}`)
+        .then(res => res.json())
+        .then(data => setProducts(data))
+      // verifica delle chiamate ad ogni digitazione da tastiera di user
+      console.log('richiesta api')
+    } catch (error) {
+      (error => console.error(error));
+    }
+  }
+
+  // salviamo in una varianbile la nostra funzione per poi debounsarla
+  const debouncedFetchProducts = useCallback(
+    debounce(fetchProducts, 500), [])
+
+
+
+  useEffect(() => {
+    debouncedFetchProducts(query);
   }, [query]);
 
 
